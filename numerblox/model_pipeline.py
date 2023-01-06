@@ -46,23 +46,23 @@ class ModelPipeline:
     def preprocess(self, dataf: Union[pd.DataFrame, NumerFrame]) -> NumerFrame:
         """ Run all preprocessing steps. Copies input by default. """
         if self.copy_first:
-            dataf = CopyPreProcessor()(dataf)
+            dataf = CopyPreProcessor().transform(dataf)
         for preprocessor in tqdm(self.preprocessors,
                                  desc=f"{self.pipeline_name} Preprocessing:",
                                  position=0):
             rich_print(f":construction: Applying preprocessing: '[bold]{preprocessor.__class__.__name__}[/bold]' :construction:")
-            dataf = preprocessor(dataf)
+            dataf = preprocessor.transform(dataf)
         return NumerFrame(dataf)
 
     def postprocess(self, dataf: Union[pd.DataFrame, NumerFrame]) -> NumerFrame:
         """ Run all postprocessing steps. Standardizes model prediction by default. """
         if self.standardize:
-            dataf = Standardizer()(dataf)
+            dataf = Standardizer().transform(dataf)
         for postprocessor in tqdm(self.postprocessors,
                                   desc=f"{self.pipeline_name} Postprocessing: ",
                                   position=0):
             rich_print(f":construction: Applying postprocessing: '[bold]{postprocessor.__class__.__name__}[/bold]' :construction:")
-            dataf = postprocessor(dataf)
+            dataf = postprocessor.transform(dataf)
         return NumerFrame(dataf)
 
     def process_models(self, dataf: Union[pd.DataFrame, NumerFrame]) -> NumerFrame:

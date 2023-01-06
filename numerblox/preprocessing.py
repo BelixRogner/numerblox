@@ -24,27 +24,25 @@ from typing import Union, Tuple
 from multiprocessing.pool import Pool
 from sklearn.linear_model import Ridge
 from sklearn.mixture import BayesianGaussianMixture
+from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.preprocessing import QuantileTransformer, MinMaxScaler
 
 from .numerframe import NumerFrame, create_numerframe
 
 # %% ../nbs/03_preprocessing.ipynb 9
-class BaseProcessor(ABC):
+class BaseProcessor(BaseEstimator, TransformerMixin):
     """Common functionality for preprocessors and postprocessors."""
 
     def __init__(self):
-        ...
+        super().__init__()
 
-    @abstractmethod
-    def transform(
-        self, dataf: Union[pd.DataFrame, NumerFrame], *args, **kwargs
-    ) -> NumerFrame:
-        ...
+    def fit(self, X, y=None):
+        """No-op."""
+        return self
 
-    def __call__(
-        self, dataf: Union[pd.DataFrame, NumerFrame], *args, **kwargs
-    ) -> NumerFrame:
-        return self.transform(dataf=dataf, *args, **kwargs)
+    def partial_fit(self, X, y=None):
+        """No-op."""
+        return self
 
 # %% ../nbs/03_preprocessing.ipynb 12
 def display_processor_info(func):
@@ -67,7 +65,6 @@ def display_processor_info(func):
 @typechecked
 class CopyPreProcessor(BaseProcessor):
     """Copy DataFrame to avoid manipulation of original DataFrame."""
-
     def __init__(self):
         super().__init__()
 

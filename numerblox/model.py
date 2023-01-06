@@ -9,17 +9,14 @@ __all__ = ['BaseModel', 'DirectoryModel', 'SingleModel', 'WandbKerasModel', 'Ext
 import os
 import gc
 import uuid
-import wandb
-import joblib
 import pickle
+import joblib
 import numpy as np
 import pandas as pd
-import lightgbm as lgb
 from pathlib import Path
 from typing import Union
 from tqdm.auto import tqdm
 from functools import partial
-from catboost import CatBoost
 from numerbay import NumerBay
 from typeguard import typechecked
 from abc import ABC, abstractmethod
@@ -137,7 +134,6 @@ class SingleModel(BaseModel):
                  combine_preds = False, autoencoder_mlp = False,
                  feature_cols: list = None
                  ):
-        import tensorflow as tf
         self.model_file_path = Path(model_file_path)
         assert self.model_file_path.exists(), f"File path '{self.model_file_path}' does not exist."
         assert self.model_file_path.is_file(), f"File path must point to file. Not valid for '{self.model_file_path}'."
@@ -145,6 +141,10 @@ class SingleModel(BaseModel):
                          model_name=model_name,
                          )
         self.model_suffix = self.model_file_path.suffix
+
+        import joblib
+        from catboost import CatBoost
+        import tensorflow as tf
         self.suffix_to_model_mapping = {".joblib": joblib.load,
                                         ".cbm": CatBoost().load_model,
                                         ".pkl": pickle.load,
@@ -228,6 +228,7 @@ class WandbKerasModel(SingleModel):
         Use W&B API to download .h5 model file.
         More info on API: https://docs.wandb.ai/guides/track/public-api-guide
         """
+        import wandb
         if Path(self.file_name).is_file() and not self.replace:
             rich_print(f":warning: [red] Model file '{self.file_name}' already exists in local environment.\
             Skipping download of W&B run model. If this is not the model you want to use for prediction\
@@ -405,6 +406,7 @@ class CatBoostModel(DirectoryModel):
                          )
 
     def load_models(self) -> list:
+        from catboost import CatBoost
         return [CatBoost().load_model(path) for path in self.model_paths]
 
 # %% ../nbs/04_model.ipynb 46
@@ -430,6 +432,7 @@ class LGBMModel(DirectoryModel):
                          )
 
     def load_models(self) -> list:
+        import lightgbm as lgb
         return [lgb.Booster(model_file=str(path)) for path in self.model_paths]
 
 # %% ../nbs/04_model.ipynb 52
